@@ -3,6 +3,8 @@ const router = express.Router();
 const db = require("../postgres");
 const moment = require("moment");
 const calculateNewFinishTime = require("./helper.js");
+const Redis = require("redis");
+const redisClient = Redis.createClient();
 
 /* CREATE
 
@@ -34,6 +36,11 @@ router.post("/:duration", async (req, res) => {
     const pomodoro = await db.query(
       "INSERT INTO pomodoro (name, startAt, pauseAt, finishAt, webhook) VALUES ($1,$2,$3,$4,$5) RETURNING *",
       [req.body.name, start, null, finish, req.body.webhook]
+    );
+    await redisClient.setex(
+      pomodoro.rows[0].pomodoro_id,
+      req.params.duration,
+      req.body.webhook
     );
     //Return the whole object inserted
     res.json(pomodoro.rows[0]);
@@ -157,6 +164,7 @@ router.put("/pause/:id", async (req, res) => {
         "UPDATE pomodoro SET pauseat = ($1) WHERE pomodoro_id = ($2)",
         [pause, req.params.id]
       );
+      redisClient.del(req.params.id);
       res.send("PAUSED");
     } catch (err) {
       res.status(500).json(err.message);
@@ -199,9 +207,15 @@ router.put("/resume/:id", async (req, res) => {
 
     //Update the db
     try {
-      const pomodoro = await db.query(
+      await db.query(
         "UPDATE pomodoro SET pauseat = ($1), finishat = ($2) WHERE pomodoro_id = ($3)",
         [null, newFinishAt, req.params.id]
+      );
+      console.log(pomodoro.webhook);
+      await redisClient.setex(
+        pomodoro.pomodoro_id,
+        Math.round(moment(newFinishAt).diff(moment(), "seconds", true)),
+        pomodoro.webhook
       );
       res.send("RESUMED");
     } catch (err) {
