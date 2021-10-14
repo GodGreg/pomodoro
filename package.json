@@ -1,0 +1,27 @@
+{
+  "name": "perfect-recall-technical",
+  "version": "1.0.0",
+  "description": "Technical Assessment -- Pomodoro",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/GodGreg/Perfect-recall-technical.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/GodGreg/Perfect-recall-technical/issues"
+  },
+  "homepage": "https://github.com/GodGreg/Perfect-recall-technical#readme",
+  "dependencies": {
+    "dotenv": "^10.0.0",
+    "express": "^4.17.1",
+    "moment": "^2.29.1",
+    "nodemon": "^2.0.13",
+    "pg": "^8.7.1",
+    "redis": "^3.1.2"
+  }
+}
