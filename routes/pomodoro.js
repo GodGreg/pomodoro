@@ -197,6 +197,7 @@ router.put("/resume/:id", async (req, res) => {
     if (!pomodoro.pauseat) {
       //304 Not Modified
       res.status(304).send("Timer not paused");
+      return;
     }
 
     //Add the amount of time since the pause (if not null) to the end time
@@ -211,7 +212,6 @@ router.put("/resume/:id", async (req, res) => {
         "UPDATE pomodoro SET pauseat = ($1), finishat = ($2) WHERE pomodoro_id = ($3)",
         [null, newFinishAt, req.params.id]
       );
-      console.log(pomodoro.webhook);
       await redisClient.setex(
         pomodoro.pomodoro_id,
         Math.round(moment(newFinishAt).diff(moment(), "seconds", true)),

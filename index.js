@@ -32,9 +32,7 @@ async function loadRedis() {
       let timer = Math.round(
         moment(row.finishat).diff(moment(), "seconds", true)
       );
-      console.log(timer);
       if (timer > 0) {
-        console.log(row);
         redisClient.setex(row.pomodoro_id, timer, row.webhook);
       }
     }
@@ -47,18 +45,17 @@ function checkIfAnyExpired() {
   try {
     //Loops through all the keys in redis
     redisClient.keys("*", async (err, keys) => {
-      if (err) return console.error("1");
-      console.log(keys);
+      if (err) return console.error(err);
       //Check if the key has expired
       keys.forEach((key) => {
         redisClient.ttl(key, async (err, res) => {
           if (err) return console.log("ERROR 2");
-          console.log(res);
+          console.log("ID: " + key + ", Time Remaining: " + res);
           //If the key has expired call the webhook
           if (res <= 0) {
             //Get the webhook
             redisClient.get(key, async (err, value) => {
-              if (err) return console.error("3");
+              if (err) return console.error(err);
               try {
                 console.log(value);
                 await axios
@@ -69,7 +66,7 @@ function checkIfAnyExpired() {
                       "Content-Type": "application/json",
                     },
                   })
-                  .then((response) => console.log(response));
+                  .then((response) => console.log("Successfully hit webhook"));
               } catch (e) {
                 console.log("axios error");
               }
@@ -82,7 +79,8 @@ function checkIfAnyExpired() {
     console.log("BIG ERROR");
   }
 }
-//Create a timed loop to check if a pomodoro
+
+//Create a timed loop to check if a pomodoro is done
 //Use Redis for speed
 setInterval(() => {
   console.log("-----");
