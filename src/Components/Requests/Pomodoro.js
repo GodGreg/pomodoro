@@ -9,7 +9,6 @@ async function status({ id }) {
 }
 
 async function getAll() {
-  console.log("calling");
   return GET(`/pomodoro`);
 }
 

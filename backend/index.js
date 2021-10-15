@@ -48,7 +48,6 @@ app.listen(4000, () => {
 async function loadRedis() {
   redisClient.flushall();
   const pomodoro = await db.query("SELECT * FROM pomodoro");
-  //console.log(pomodoro);
   pomodoro.rows.forEach((row) => {
     if (!row.pauseat) {
       let timer = Math.round(
@@ -100,7 +99,7 @@ function checkIfAnyExpired() {
       });
     });
   } catch (e) {
-    console.log("BIG ERROR");
+    console.log("Error checking for expired timers");
   }
 }
 

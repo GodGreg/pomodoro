@@ -40,7 +40,6 @@ async function PUT(url, databody) {
       "Content-Type": "application/json",
     },
   });
-  console.log({ response });
   const body = response.json();
   if (!response.ok) {
     throw Error(body.message);
