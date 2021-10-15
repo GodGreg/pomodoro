@@ -13,7 +13,7 @@ DBs: postgresql, redis
 
 ---------------------------------------------------------------------------
 
-Implementation of a [pomodoro](Wikipedia) timer 
+Implementation of a [pomodoro](https://en.wikipedia.org/wiki/Pomodoro_Technique) timer 
 
 Published postman endpoints: https://documenter.getpostman.com/view/9650075/UV5Ukeor
 
