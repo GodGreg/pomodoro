@@ -1,5 +1,6 @@
 # Pomodoro
 
+Quick [Video Overview](https://www.loom.com/share/ac6b08aa75714da8a4c08426bf1fcd1a): 
 ### Setup
 1. Clone
 2. `sudo apt-get install redis npm nodejs`
