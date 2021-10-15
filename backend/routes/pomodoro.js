@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const db = require("../postgres");
 const moment = require("moment");
-const calculateNewFinishTime = require("./helper.js");
+const { calculateNewFinishTime, prettyReturn } = require("./helper.js");
 const Redis = require("redis");
 const redisClient = Redis.createClient();
 
@@ -50,16 +50,6 @@ router.post("/:duration", async (req, res) => {
   }
 });
 
-//Get all
-router.get("/", async (req, res) => {
-  try {
-    const pomodoro = await db.query("SELECT * FROM pomodoro");
-    res.json(pomodoro.rows);
-  } catch (err) {
-    res.status(500).json(err.message);
-  }
-});
-
 /* STATUS
   
   Returns:
@@ -82,38 +72,21 @@ router.get("/:id", async (req, res) => {
       [req.params.id]
     );
     pomodoro = pomodoro.rows[0];
+    let result = prettyReturn(pomodoro);
+    res.json(result);
+  } catch (err) {
+    res.status(500).json(err.message);
+  }
+});
 
-    //Returns true if finishat is before the current date
-    let completed = moment(pomodoro.finishat).isBefore(moment());
+//Get all
+router.get("/", async (req, res) => {
+  try {
+    const pomodoro = await db.query("SELECT * FROM pomodoro");
 
-    //Calculate Time Remaining
-    //Add the amount of time since the pause (if not null) to the finish time
-    const newFinishAt = calculateNewFinishTime(
-      moment(pomodoro.finishat),
-      moment(pomodoro.pauseat)
-    );
-    let remaining = moment.duration(moment(newFinishAt).diff(moment()));
-
-    let result = {
-      name: pomodoro.name,
-      status: pomodoro.pauseat
-        ? "Paused"
-        : completed
-        ? "Completed"
-        : "In Progress",
-      start: pomodoro.startat,
-      finish: pomodoro.finishat,
-      newFinish: newFinishAt,
-      pausedAt: pomodoro.pauseat,
-      remaining: {
-        years: remaining.years(),
-        months: remaining.months(),
-        days: remaining.days(),
-        hours: remaining.hours(),
-        minutes: remaining.minutes(),
-        seconds: remaining.seconds(),
-      },
-    };
+    const result = pomodoro.rows.map((row) => {
+      return prettyReturn(row);
+    });
     res.json(result);
   } catch (err) {
     res.status(500).json(err.message);
@@ -146,13 +119,11 @@ router.put("/pause/:id", async (req, res) => {
     let completed = moment(pomodoro.finishat).isBefore(moment());
 
     if (pomodoro.pauseat) {
-      //304 Not Modified
-      res.status(304).send("Timer already paused");
+      res.send({ message: "Timer already paused" });
       return;
     }
     if (completed) {
-      //304 Not Modified
-      res.status(304).send("Timer already completed");
+      res.send({ message: "Timer already completed" });
       return;
     }
 
@@ -160,12 +131,12 @@ router.put("/pause/:id", async (req, res) => {
 
     //Update the db
     try {
-      const pomodoro = await db.query(
+      await db.query(
         "UPDATE pomodoro SET pauseat = ($1) WHERE pomodoro_id = ($2)",
         [pause, req.params.id]
       );
       redisClient.del(req.params.id);
-      res.send("PAUSED");
+      res.send({ message: "PAUSED" });
     } catch (err) {
       res.status(500).json(err.message);
     }
@@ -195,8 +166,7 @@ router.put("/resume/:id", async (req, res) => {
     pomodoro = pomodoro.rows[0];
 
     if (!pomodoro.pauseat) {
-      //304 Not Modified
-      res.status(304).send("Timer not paused");
+      res.send({ message: "Timer not paused" });
       return;
     }
 
@@ -217,7 +187,7 @@ router.put("/resume/:id", async (req, res) => {
         Math.round(moment(newFinishAt).diff(moment(), "seconds", true)),
         pomodoro.webhook
       );
-      res.send("RESUMED");
+      res.send({ message: "RESUMED" });
     } catch (err) {
       res.status(500).json(err.message);
     }

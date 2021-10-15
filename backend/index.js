@@ -1,14 +1,36 @@
 const Redis = require("redis");
-const env = require("dotenv").config();
 const express = require("express");
 const db = require("./postgres");
 const moment = require("moment");
 const pomodoroRoutes = require("./routes/pomodoro");
 const axios = require("axios");
+const cors = require("cors");
 
 const redisClient = Redis.createClient();
 
 const app = express();
+
+//------------------------------------------------------------------------------
+//CORS
+//------------------------------------------------------------------------------
+//CORS must load before everything else
+
+//A list of websites that can access the data for the api calls.(CORS)
+const whitelist = ["http://localhost:3000", "https://localhost:3000"];
+//Include "cors(corsOptions)" to protect the endpoint
+//Example: app.get('/api/questions', cors(corsOptions), (req, res) => {
+const corsOptions = {
+  origin: function (origin, callback) {
+    //If the url trying to query our endpoints is not in the whitelist, deny access
+    if (whitelist.indexOf(origin) !== -1 || true) {
+      //Added true to use postman
+      callback(null, true);
+    } else {
+      callback(new Error("Access Denied by the 'Cookie Monster' NOM NOM NOM"));
+    }
+  },
+};
+app.use(cors(corsOptions));
 app.use(express.json());
 
 app.get("/", function (req, res) {
@@ -52,7 +74,8 @@ function checkIfAnyExpired() {
           if (err) return console.log("ERROR 2");
           console.log("ID: " + key + ", Time Remaining: " + res);
           //If the key has expired call the webhook
-          if (res <= 0) {
+          if (res <= 1) {
+            console.log("Timer Finished: " + key);
             //Get the webhook
             redisClient.get(key, async (err, value) => {
               if (err) return console.error(err);
@@ -71,6 +94,7 @@ function checkIfAnyExpired() {
                 console.log("axios error");
               }
             });
+            redisClient.del(key);
           }
         });
       });
