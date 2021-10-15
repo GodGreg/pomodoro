@@ -8,7 +8,9 @@
 
 ### Tech Stack
 Frontend: react.js, materialUI
+
 Backend: node.js, express.js
+
 DBs: postgresql, redis
 
 ---------------------------------------------------------------------------
